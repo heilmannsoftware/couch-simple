@@ -14,21 +14,21 @@ maintainer:          mdorman@jaunder.io
 name:                couch-simple
 synopsis:            A modern, lightweight, complete client for CouchDB
 tested-with:         GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.1
-version:             0.0.1.1
+version:             0.0.2.0
 
 source-repository head
   type:     git
   location: https://github.com/mdorman/couch-simple.git
 
 library
-  build-depends: base >= 4.6 && < 4.10
+  build-depends: base >= 4.6 && < 5
                , aeson >= 0.9
                , attoparsec
                , bifunctors
                , bytestring
                , data-default
                , exceptions
-               , http-client < 0.5
+               , http-client < 0.6
                , http-types
                , integer-gmp
                , mtl
@@ -56,42 +56,3 @@ library
   hs-source-dirs: src/lib
   if impl(ghc < 7.8)
     build-depends: bytestring-builder
-
-test-suite test
-  build-depends: aeson
-               , base >= 4.6 && < 4.10
-               , bytestring
-               , couch-simple
-               , data-default
-               , directory
-               , exceptions
-               , filepath
-               , hjsonschema == 0.10.*
-               , hlint == 1.*
-               , http-client >= 0.4.30 && < 0.5
-               , http-types
-               , random
-               , tasty
-               , tasty >= 0.10.1.2
-               , tasty-hunit
-               , text
-               , transformers >= 0.4
-               , unordered-containers
-               , uuid
-  build-tools: couchdb
-  default-language: Haskell2010
-  ghc-options: -Wall
-  hs-source-dirs: test
-  main-is: Main.hs
-  other-modules: Functionality
-                 Functionality.Explicit.Configuration
-                 Functionality.Explicit.Database
-                 Functionality.Explicit.Design
-                 Functionality.Explicit.Doc
-                 Functionality.Explicit.Local
-                 Functionality.Explicit.Server
-                 Functionality.Internal
-                 Functionality.Util
-                 Quality
-                 Quality.HLint
-  type: exitcode-stdio-1.0

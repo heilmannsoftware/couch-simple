@@ -32,14 +32,12 @@ import           Data.Function              (($), (.))
 import           Data.Functor               (fmap)
 import           Data.HashMap.Strict        (lookup)
 import           Data.Maybe                 (Maybe, maybe)
-import           Data.Monoid                (mempty)
 import           Data.Text                  (Text, pack)
 import           Data.Text.Encoding         (decodeUtf8)
 import           Data.Text.Read             (decimal)
 import           Data.Tuple                 (fst, snd)
 import           Database.Couch.Types       (DocRev (DocRev), Error (AlreadyExists, Conflict, HttpError, ImplementationError, InvalidName, NotFound, ParseFail, Unauthorized))
 import           GHC.Integer                (Integer)
-import           Network.HTTP.Client        (HttpException (StatusCodeException))
 import           Network.HTTP.Types         (HeaderName, ResponseHeaders,
                                              Status, statusCode)
 
@@ -85,7 +83,6 @@ responseValue =
 -- | Check the status code for the response
 checkStatusCode :: ResponseParser ()
 checkStatusCode = do
-  h <- responseHeaders
   s <- responseStatus
   case statusCode s of
     200 -> return ()
@@ -100,7 +97,7 @@ checkStatusCode = do
     409 -> throwE Conflict
     412 -> throwE AlreadyExists
     415 -> throwE $ ImplementationError "The server says we sent a bad content type, which shouldn't happen.  Please open an issue at https://github.com/mdorman/couch-simple/issues with a test case if possible."
-    _   -> throwE $ HttpError (StatusCodeException s h mempty)
+    _   -> throwE $ HttpError s
 
 -- | Try to retrieve a header from the response
 maybeGetHeader :: HeaderName -> ResponseParser (Maybe ByteString)

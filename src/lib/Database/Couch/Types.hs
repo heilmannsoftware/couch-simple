@@ -49,8 +49,8 @@ import           Data.Text               (Text, null)
 import           Data.Text.Encoding      (encodeUtf8)
 import qualified Data.Vector             as Vector (fromList)
 import           GHC.Generics            (Generic)
-import           Network.HTTP.Client     (CookieJar, HttpException, Manager)
-import           Network.HTTP.Types      (Header, HeaderName)
+import           Network.HTTP.Client     (CookieJar, Manager)
+import           Network.HTTP.Types      (Header, HeaderName, Status)
 import           Text.Show               (Show)
 
 -- * Basic types to distinguish CouchDB information
@@ -630,7 +630,7 @@ data Error
   -- | The document already exists, and without the appropriate rev
   | Conflict
   -- | The server complained about the content of our request.  Sounds like the library is broken. :(
-  | HttpError HttpException
+  | HttpError Status
   -- | The server complained about the content of our request.  Sounds like the library is broken. :(
   | ImplementationError Text
   -- | The name you tried to give for the DB is invalid
