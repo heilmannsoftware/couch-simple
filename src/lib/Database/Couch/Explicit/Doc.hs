@@ -24,13 +24,11 @@ module Database.Couch.Explicit.Doc where
 
 import           Control.Monad.IO.Class          (MonadIO)
 import           Data.Aeson                      (FromJSON, ToJSON)
+import           Data.ByteString                 (ByteString)
 import           Data.Maybe                      (Maybe)
 import           Data.Monoid                     (mempty)
-import qualified Database.Couch.Explicit.DocBase as Base (copy, delete, get,
-                                                          put)
-import           Database.Couch.Types            (Context, DocId, DocRev,
-                                                  ModifyDoc, Result,
-                                                  RetrieveDoc)
+import qualified Database.Couch.Explicit.DocBase as Base (copy, delete, get, put, putAttachment)
+import           Database.Couch.Types            (Context, DocId, DocRev, ModifyDoc, Result, RetrieveDoc)
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/document/common.html#head--db-docid Get the size and revision of the specified document>
 
@@ -81,6 +79,24 @@ put :: (FromJSON a, MonadIO m, ToJSON b)
     -> Context
     -> m (Result a)
 put = Base.put mempty
+
+{- | <http://docs.couchdb.org/en/1.6.1/api/document/common.html#put--db-docid Create the document attachment>
+
+The return value is an object that can hold "id" and "rev" keys, but if you don't need those values, it is easily decoded into a 'Data.Bool.Bool' with our 'asBool' combinator:
+
+>>> value :: Result Bool <- DocBase.put modifyDoc "pandas" Nothing SomeValue ctx >>= asBool
+
+Status: __Complete__ -}
+putAttachment :: (FromJSON a, MonadIO m)
+    => ModifyDoc -- ^ Parameters for modifying document
+    -> DocId -- ^ The document ID
+    -> Maybe DocRev -- ^ An optional document revision
+    -> ByteString -- ^ The attachment name
+    -> ByteString -- ^ The attachment content type
+    -> ByteString -- ^ The attachment body content
+    -> Context
+    -> m (Result a)
+putAttachment = Base.putAttachment mempty
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/document/common.html#delete--db-docid Delete the specified document>
 

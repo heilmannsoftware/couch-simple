@@ -25,30 +25,21 @@ module Database.Couch.Explicit.DocBase where
 import           Control.Monad                 (return, unless)
 import           Control.Monad.IO.Class        (MonadIO)
 import           Control.Monad.Trans.Except    (throwE)
-import           Data.Aeson                    (FromJSON, ToJSON,
-                                                Value (Null, Number, String),
-                                                object)
+import           Data.Aeson                    (FromJSON, ToJSON, Value (Null, Number, String), object)
 import           Data.ByteString               (ByteString, null)
 import           Data.Function                 (($), (.))
 import           Data.Maybe                    (Maybe, maybe)
 import           Data.Monoid                   ((<>))
-import           Database.Couch.Internal       (standardRequest,
-                                                structureRequest)
-import           Database.Couch.RequestBuilder (RequestBuilder, addPath,
-                                                selectDb, selectDoc, setHeaders,
-                                                setJsonBody, setMethod,
-                                                setQueryParam)
-import           Database.Couch.ResponseParser (checkStatusCode,
-                                                getContentLength, getDocRev,
-                                                responseStatus, responseValue,
-                                                toOutputType)
-import           Database.Couch.Types          (Context, DocId, DocRev,
-                                                Error (Unknown), ModifyDoc,
-                                                Result, RetrieveDoc, reqDocId,
-                                                reqDocRev, toHTTPHeaders,
-                                                toQueryParameters, unwrapDocRev)
+import           Database.Couch.Internal       (standardRequest, structureRequest)
+import           Database.Couch.RequestBuilder (RequestBuilder, addPath, selectDb, selectDoc, setBody, setHeaders,
+                                                setJsonBody, setMethod, setQueryParam)
+import           Database.Couch.ResponseParser (checkStatusCode, getContentLength, getDocRev, responseStatus,
+                                                responseValue, toOutputType)
+import           Database.Couch.Types          (Context, DocId, DocRev, Error (Unknown), ModifyDoc, Result, RetrieveDoc,
+                                                reqDocId, reqDocRev, toHTTPHeaders, toQueryParameters, unwrapDocRev)
 import           GHC.Num                       (fromInteger)
 import           Network.HTTP.Types            (statusCode)
+import           Network.HTTP.Types.Header     (hContentType)
 
 {- | Get the size and revision of the specified document
 
@@ -140,6 +131,34 @@ put prefix param docid rev doc =
       setMethod "PUT"
       modBase prefix param docid rev
       setJsonBody doc
+
+{- | Create the document attachment
+
+The return value is an object that can hold "id" and "rev" keys, but if you don't need those values, it is easily decoded into a 'Data.Bool.Bool' with our 'asBool' combinator:
+
+>>> value :: Result Bool <- DocBase.put "prefix" modifyDoc "pandas" Nothing SomeValue ctx >>= asBool
+
+Status: __Complete__ -}
+
+putAttachment :: (FromJSON a, MonadIO m)
+    => ByteString -- ^ A prefix for the document ID
+    -> ModifyDoc -- ^ The parameters for modifying the document
+    -> DocId -- ^ The document ID
+    -> Maybe DocRev -- ^ An optional document revision
+    -> ByteString -- ^ The attachment name
+    -> ByteString -- ^ The attachment content type
+    -> ByteString -- ^ The attachment body content
+    -> Context
+    -> m (Result a)
+putAttachment prefix param docid rev attname contenttype content =
+  standardRequest request
+  where
+    request = do
+      setMethod "PUT"
+      modBase prefix param docid rev
+      addPath attname
+      setHeaders [(hContentType, contenttype)]
+      setBody content
 
 {- | Delete the specified document
 

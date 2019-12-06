@@ -27,14 +27,11 @@ import           Data.List            (unionBy)
 import           Data.Maybe           (Maybe (Just), maybe)
 import           Data.Monoid          (mempty, (<>))
 import           Data.Tuple           (fst)
-import           Database.Couch.Types (Context, Credentials (Basic), DocId,
-                                       DocRev, ctxCookies, ctxCred, reqDb,
-                                       reqDocId, reqDocRev, reqHost,
-                                       reqPassword, reqPort, reqUser)
-import           Network.HTTP.Client  (Request, RequestBody (RequestBodyLBS),
-                                       applyBasicAuth, cookieJar, host, method,
-                                       path, port, requestBody, requestHeaders,
-                                       setQueryString, defaultRequest)
+import           Database.Couch.Types (Context, Credentials (Basic), DocId, DocRev, ctxCookies, ctxCred, reqDb,
+                                       reqDocId, reqDocRev, reqHost, reqPassword, reqPort, reqUser)
+import           Network.HTTP.Client  (Request, RequestBody (RequestBodyBS, RequestBodyLBS), applyBasicAuth, cookieJar,
+                                       defaultRequest, host, method, path, port, requestBody, requestHeaders,
+                                       setQueryString)
 import           Network.HTTP.Types   (RequestHeaders, hAccept, hContentType)
 
 -- | The state of our request as it's being built
@@ -202,6 +199,13 @@ setJsonBody :: ToJSON a
 setJsonBody new = do
   (BuilderState r q d p) <- get
   put $ BuilderState r { requestBody = RequestBodyLBS $ encode new } q d p
+
+-- | Set the body of the request to the encoded JSON value
+setBody :: ByteString -- ^ The body content
+        -> RequestBuilder ()
+setBody new = do
+  (BuilderState r q d p) <- get
+  put $ BuilderState r { requestBody = RequestBodyBS new } q d p
 
 -- | Set the method for the 'Request'.
 setMethod :: ByteString -> RequestBuilder ()
