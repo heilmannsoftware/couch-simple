@@ -274,6 +274,7 @@ dbChangesParam = DbChanges Nothing Nothing Nothing Nothing Nothing Nothing Nothi
 -- | The basic structure
 data DbAllDocs
   = DbAllDocs {
+    adAttachments   :: Maybe Bool,
     adConflicts     :: Maybe Bool,
     adDescending    :: Maybe Bool,
     adEndKey        :: Maybe Text,
@@ -292,6 +293,7 @@ data DbAllDocs
 -- | Convert to query parameters
 instance ToQueryParameters DbAllDocs where
   toQueryParameters DbAllDocs {..} = catMaybes [
+    boolToQP "attachments" adAttachments,
     boolToQP "conflicts" adConflicts,
     boolToQP "descending" adDescending,
     textToQP "end_key" adEndKey,
@@ -309,7 +311,7 @@ instance ToQueryParameters DbAllDocs where
 
 -- | The default (empty) parameters for bulk retrieval of documents
 dbAllDocs :: DbAllDocs
-dbAllDocs = DbAllDocs Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+dbAllDocs = DbAllDocs Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- ** Paramters for bulk creation and updating parameters
 
