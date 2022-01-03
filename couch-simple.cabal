@@ -28,7 +28,7 @@ library
                , bytestring
                , data-default
                , exceptions
-               , http-client <= 0.6.4
+               , http-client >= 0.6.4 && < 0.7
                , http-types
                , integer-gmp
                , mtl
