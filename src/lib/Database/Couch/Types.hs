@@ -212,7 +212,8 @@ data DbUpdates
   = DbUpdates {
     feed      :: Maybe FeedType,
     timeOut   :: Maybe Int,
-    heartBeat :: Maybe Bool
+    heartBeat :: Maybe Bool,
+    since     :: Maybe SinceType
     }
 
 -- | Convert to query parameters
@@ -220,12 +221,13 @@ instance ToQueryParameters DbUpdates where
   toQueryParameters DbUpdates {..} = catMaybes [
     feedTypeToQP feed,
     intToQP "timeout" timeOut,
-    boolToQP "heartbeat" heartBeat
+    boolToQP "heartbeat" heartBeat,
+    sinceTypeToQP since
     ]
 
 -- | The default (empty) parameters
 dbUpdatesParam :: DbUpdates
-dbUpdatesParam = DbUpdates Nothing Nothing Nothing
+dbUpdatesParam = DbUpdates Nothing Nothing Nothing Nothing
 
 -- ** Parameters for monitoring database changes
 
