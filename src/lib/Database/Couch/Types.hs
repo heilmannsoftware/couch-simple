@@ -248,7 +248,8 @@ data DbChanges
     cSince           :: Maybe SinceType,
     cStyle           :: Maybe StyleType,
     cTimeout         :: Maybe Int,
-    cView            :: Maybe Text
+    cView            :: Maybe Text,
+    cSeqInterval     :: Maybe Int
     }
 
 -- | Convert to query parameters
@@ -266,12 +267,13 @@ instance ToQueryParameters DbChanges where
     sinceTypeToQP cSince,
     styleTypeToQP cStyle,
     intToQP "timeout" cTimeout,
+    intToQP "seq_interval" cSeqInterval,
     textToQP "view" cView
     ]
 
 -- | The default (empty) parameters
 dbChangesParam :: DbChanges
-dbChangesParam = DbChanges Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+dbChangesParam = DbChanges Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- ** Parameters for bulk retrieval of documents.
 
