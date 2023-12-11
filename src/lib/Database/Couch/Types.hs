@@ -418,14 +418,14 @@ feedTypeToQP = fmap (("feed",) . Just . go)
 -- | Possible values of since
 data SinceType
   = Now
-  | Since Int
+  | Since Text
 
 -- | Convert since to Query Parameter
 sinceTypeToQP :: Maybe SinceType -> Maybe (ByteString, Maybe ByteString)
 sinceTypeToQP = fmap (("since",) . Just . go)
     where
       go Now = "now"
-      go (Since i) = (toStrict . toLazyByteString . intDec) i
+      go (Since i) = encodeUtf8 i
 
 -- | Possible values for style
 data StyleType
