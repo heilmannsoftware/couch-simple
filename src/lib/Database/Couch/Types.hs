@@ -244,6 +244,7 @@ data DbChanges
     cAttachments     :: Maybe Bool,
     cAttEncodingInfo :: Maybe Bool,
     cLastEvent       :: Maybe Text,
+    cLimit           :: Maybe Int,
     cSince           :: Maybe SinceType,
     cStyle           :: Maybe StyleType,
     cTimeout         :: Maybe Int,
@@ -261,6 +262,7 @@ instance ToQueryParameters DbChanges where
     boolToQP "include_docs" cIncludeDocs,
     boolToQP "attachments" cAttachments,
     boolToQP "att_encoding_info" cAttEncodingInfo,
+    intToQP "limit" cLimit,
     sinceTypeToQP cSince,
     styleTypeToQP cStyle,
     intToQP "timeout" cTimeout,
@@ -269,7 +271,7 @@ instance ToQueryParameters DbChanges where
 
 -- | The default (empty) parameters
 dbChangesParam :: DbChanges
-dbChangesParam = DbChanges Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+dbChangesParam = DbChanges Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- ** Parameters for bulk retrieval of documents.
 
