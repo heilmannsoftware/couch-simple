@@ -21,20 +21,22 @@ Each function takes a 'Database.Couch.Types.Context' as its final parameter, and
 
 module Database.Couch.Explicit.Server where
 
-import           Control.Monad                 (return)
+import           Control.Monad                 (return, when)
 import           Control.Monad.IO.Class        (MonadIO)
+import           Control.Monad.State.Strict    (modify')
 import           Data.Aeson                    (FromJSON)
 import           Data.Function                 (($))
 import           Data.Int                      (Int)
-import           Data.Maybe                    (Maybe (Just))
+import           Data.Maybe                    (Maybe (Just), isJust)
 import           Data.String                   (fromString)
 import           Data.Text                     (Text)
 import           Database.Couch.Internal       (standardRequest)
 import           Database.Couch.RequestBuilder (addPath, addQueryParam,
-                                                setMethod, setQueryParam)
-import           Database.Couch.Types          (Context, DbUpdates, Result,
+                                                setMethod, setQueryParam, bsRequest)
+import           Database.Couch.Types          (Context, DbUpdates(heartBeat), Result,
                                                 toQueryParameters)
 import           GHC.Err                       (undefined)
+import           Network.HTTP.Client           (responseTimeout, responseTimeoutNone)
 import           Text.Show                     (show)
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/server/common.html#get-- Get most basic meta-information>
@@ -88,7 +90,7 @@ allDbs =
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/server/common.html#get--_db_updates Get a list of all database events>
 
-This call does not yet stream out results, so it's functionality is limited.
+This call does not stream out results. Thus, it only works with with FeedType normal or long polling.
 
 The return value is a list of database update events, so it is easily decoded into a 'Data.List.List' of 'Data.Aeson.Value':
 
@@ -102,6 +104,7 @@ dbUpdates param =
     request = do
       addPath "_db_updates"
       setQueryParam $ toQueryParameters param
+      when (isJust $ heartBeat param) $ modify' (\bs -> bs {bsRequest = (bsRequest bs) {responseTimeout = responseTimeoutNone}})
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/server/common.html#get--_log Get the log output of the server>
 
