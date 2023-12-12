@@ -246,6 +246,7 @@ changes param =
         (setHeaders [("Last-Event-Id", encodeUtf8 . fromJust $ cLastEvent param)])
       selectDb
       addPath "_changes"
+      setQueryParam $ toQueryParameters param
       when (isJust $ cHeartBeat param) $ modify' (\bs -> bs {bsRequest = (bsRequest bs) {responseTimeout = responseTimeoutNone}})
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/database/compact.html#post--db-_compact Compact a database>
