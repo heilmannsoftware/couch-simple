@@ -212,7 +212,8 @@ data DbUpdates
   = DbUpdates {
     feed      :: Maybe FeedType,
     timeOut   :: Maybe Int,
-    heartBeat :: Maybe Bool
+    heartBeat :: Maybe Bool,
+    since     :: Maybe SinceType
     }
 
 -- | Convert to query parameters
@@ -220,12 +221,13 @@ instance ToQueryParameters DbUpdates where
   toQueryParameters DbUpdates {..} = catMaybes [
     feedTypeToQP feed,
     intToQP "timeout" timeOut,
-    boolToQP "heartbeat" heartBeat
+    boolToQP "heartbeat" heartBeat,
+    sinceTypeToQP since
     ]
 
 -- | The default (empty) parameters
 dbUpdatesParam :: DbUpdates
-dbUpdatesParam = DbUpdates Nothing Nothing Nothing
+dbUpdatesParam = DbUpdates Nothing Nothing Nothing Nothing
 
 -- ** Parameters for monitoring database changes
 
@@ -242,10 +244,12 @@ data DbChanges
     cAttachments     :: Maybe Bool,
     cAttEncodingInfo :: Maybe Bool,
     cLastEvent       :: Maybe Text,
+    cLimit           :: Maybe Int,
     cSince           :: Maybe SinceType,
     cStyle           :: Maybe StyleType,
     cTimeout         :: Maybe Int,
-    cView            :: Maybe Text
+    cView            :: Maybe Text,
+    cSeqInterval     :: Maybe Int
     }
 
 -- | Convert to query parameters
@@ -259,15 +263,17 @@ instance ToQueryParameters DbChanges where
     boolToQP "include_docs" cIncludeDocs,
     boolToQP "attachments" cAttachments,
     boolToQP "att_encoding_info" cAttEncodingInfo,
+    intToQP "limit" cLimit,
     sinceTypeToQP cSince,
     styleTypeToQP cStyle,
     intToQP "timeout" cTimeout,
+    intToQP "seq_interval" cSeqInterval,
     textToQP "view" cView
     ]
 
 -- | The default (empty) parameters
 dbChangesParam :: DbChanges
-dbChangesParam = DbChanges Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+dbChangesParam = DbChanges Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- ** Parameters for bulk retrieval of documents.
 
@@ -416,14 +422,14 @@ feedTypeToQP = fmap (("feed",) . Just . go)
 -- | Possible values of since
 data SinceType
   = Now
-  | Since Int
+  | Since Text
 
 -- | Convert since to Query Parameter
 sinceTypeToQP :: Maybe SinceType -> Maybe (ByteString, Maybe ByteString)
 sinceTypeToQP = fmap (("since",) . Just . go)
     where
       go Now = "now"
-      go (Since i) = (toStrict . toLazyByteString . intDec) i
+      go (Since i) = encodeUtf8 i
 
 -- | Possible values for style
 data StyleType

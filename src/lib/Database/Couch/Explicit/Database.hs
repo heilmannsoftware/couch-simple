@@ -24,6 +24,7 @@ module Database.Couch.Explicit.Database where
 
 import           Control.Monad                 (return, when)
 import           Control.Monad.IO.Class        (MonadIO)
+import           Control.Monad.State.Strict    (modify')
 import           Control.Monad.Trans.Except    (throwE)
 import           Data.Aeson                    (FromJSON, ToJSON,
                                                 Value (Object), object, toJSON)
@@ -41,15 +42,16 @@ import           Database.Couch.Internal       (standardRequest,
 import           Database.Couch.RequestBuilder (RequestBuilder, addPath,
                                                 selectDb, selectDoc, setHeaders,
                                                 setJsonBody, setMethod,
-                                                setQueryParam)
+                                                setQueryParam, bsRequest)
 import           Database.Couch.ResponseParser (responseStatus, toOutputType)
 import           Database.Couch.Types          (Context, DbAllDocs, DbBulkDocs,
-                                                DbChanges, DocId, DocRevMap,
+                                                DbChanges(cHeartBeat), DocId, DocRevMap,
                                                 Error (NotFound, Unknown),
                                                 Result, ToQueryParameters,
                                                 bdAllOrNothing, bdFullCommit,
                                                 bdNewEdits, cLastEvent,
                                                 toQueryParameters)
+import           Network.HTTP.Client           (responseTimeout, responseTimeoutNone)
 import           Network.HTTP.Types            (statusCode)
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/database/common.html#head--db Check that the requested database exists>
@@ -224,7 +226,7 @@ bulkDocs param docs =
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/database/changes.html#get--db-_changes Get a list of all document modifications>
 
-This call does not stream out results; so while it allows you to specify parameters for streaming, it's a dirty, dirty lie.
+This call does not stream out results. Thus, it only works with with FeedType normal or long polling.
 
 The return value is an object whose fields often vary, so it is most easily decoded as a 'Data.Aeson.Value':
 
@@ -244,6 +246,8 @@ changes param =
         (setHeaders [("Last-Event-Id", encodeUtf8 . fromJust $ cLastEvent param)])
       selectDb
       addPath "_changes"
+      setQueryParam $ toQueryParameters param
+      when (isJust $ cHeartBeat param) $ modify' (\bs -> bs {bsRequest = (bsRequest bs) {responseTimeout = responseTimeoutNone}})
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/database/compact.html#post--db-_compact Compact a database>
 
