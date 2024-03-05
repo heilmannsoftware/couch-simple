@@ -28,10 +28,10 @@ import           Control.Monad.State.Strict    (modify')
 import           Control.Monad.Trans.Except    (throwE)
 import           Data.Aeson                    (FromJSON, ToJSON,
                                                 Value (Object), object, toJSON)
+import           Data.Aeson.KeyMap             as KeyMap
 import           Data.Bool                     (Bool (True))
 import           Data.Function                 (($), (.))
 import           Data.Functor                  (fmap)
-import           Data.HashMap.Strict           (fromList)
 import           Data.Int                      (Int)
 import           Data.Maybe                    (Maybe (Just), catMaybes,
                                                 fromJust, isJust)
@@ -181,7 +181,7 @@ someDocs param ids =
     request = do
       setMethod "POST"
       allDocsBase param
-      let parameters = Object (fromList [("keys", toJSON ids)])
+      let parameters = Object (KeyMap.fromList [("keys", toJSON ids)])
       setJsonBody parameters
 
 {- | <http://docs.couchdb.org/en/1.6.1/api/database/bulk-api.html#post--db-_bulk_docs Create or update a list of documents>
@@ -211,7 +211,7 @@ bulkDocs param docs =
       addPath "_bulk_docs"
       -- TODO: We need a way to construct a json body from parameters [refactor]
       let parameters = Object
-                         ((fromList . catMaybes)
+                         ((KeyMap.fromList . catMaybes)
                             [ Just ("docs", toJSON docs)
                             , boolToParam "all_or_nothing" bdAllOrNothing
                             , boolToParam "new_edits" bdNewEdits
@@ -370,7 +370,7 @@ tempView map reduce =
       selectDb
       -- TODO: We need a way to construct a json body from parameters [refactor]
       let parameters = Object
-                         (fromList $ catMaybes
+                         (KeyMap.fromList $ catMaybes
                                        [ Just ("map", toJSON map)
                                        , fmap (("reduce",) . toJSON) reduce
                                        ])

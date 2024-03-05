@@ -26,11 +26,12 @@ module Database.Couch.Response where
 import           Control.Monad        ((>>=))
 import           Data.Aeson           (FromJSON, Value (Object), fromJSON)
 import qualified Data.Aeson           as Aeson (Result (Error, Success))
+import qualified Data.Aeson.Key       as Key
+import qualified Data.Aeson.KeyMap    as KeyMap
 import           Data.Bool            (Bool)
 import           Data.Either          (Either (Left, Right))
 import           Data.Function        (($), (.))
 import           Data.Functor         (fmap)
-import           Data.HashMap.Strict  (lookup)
 import           Data.Maybe           (Maybe (Just, Nothing), catMaybes, maybe)
 import           Data.String          (fromString)
 import           Data.Text            (Text, intercalate, splitAt)
@@ -64,7 +65,7 @@ asUUID v =
   case v of
     Left x              -> Left x
     Right (Object o, b) -> maybe (Left (ParseFail "Couldn't convert to UUID type"))
-                             (Right . (,b) . catMaybes . reformat) $ lookup "uuids" o
+                             (Right . (,b) . catMaybes . reformat) $ KeyMap.lookup "uuids" o
     _                   -> Left NotFound
   where
     reformat i =
@@ -83,7 +84,7 @@ getKey :: FromJSON a => Text -> Result Value -> Result a
 getKey k v  =
   case v of
     Left x              -> Left x
-    Right (Object o, b) -> maybe (Left NotFound) (Right . (, b)) $ lookup k o >>= reformat
+    Right (Object o, b) -> maybe (Left NotFound) (Right . (, b)) $ KeyMap.lookup (Key.fromText k) o >>= reformat
     _                   -> Left NotFound
   where
     reformat i =

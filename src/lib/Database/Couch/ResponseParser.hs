@@ -24,13 +24,14 @@ import           Control.Monad.Reader       (Reader, asks, runReader)
 import           Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import           Data.Aeson                 (FromJSON, Result (Error, Success),
                                              Value (Object), fromJSON)
+import qualified Data.Aeson.Key             as Key
+import qualified Data.Aeson.KeyMap          as KeyMap
 import           Data.ByteString            (ByteString)
 import           Data.Either                (Either (Left, Right), either)
 import           Data.Eq                    ((==))
 import           Data.Foldable              (find)
 import           Data.Function              (($), (.))
 import           Data.Functor               (fmap)
-import           Data.HashMap.Strict        (lookup)
 import           Data.Maybe                 (Maybe, maybe)
 import           Data.Text                  (Text, pack)
 import           Data.Text.Encoding         (decodeUtf8)
@@ -127,7 +128,7 @@ getKey :: Text -> ResponseParser Value
 getKey key = do
   v <- responseValue
   case v of
-    Object o -> maybe (throwE NotFound) return $ lookup key o
+    Object o -> maybe (throwE NotFound) return $ KeyMap.lookup (Key.fromText key) o
     _        -> throwE NotFound
 
 -- | Decode the response value to a particular type, or return an error if it can't be decoded

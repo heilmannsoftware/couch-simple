@@ -18,7 +18,6 @@ even necessarily really CouchDB-specific.
 module Database.Couch.Internal where
 
 import           Control.Monad                 (return, (>>=))
-import           Control.Monad.Catch           (handle)
 import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Data.Aeson                    (FromJSON, Value (Null))
 import           Data.Aeson.Parser             (json)
@@ -26,17 +25,17 @@ import           Data.Attoparsec.ByteString    (IResult (Done, Fail, Partial),
                                                 parseWith)
 import           Data.Either                   (Either (Right, Left), either)
 import           Data.Eq                       ((==))
-import           Data.Function                 (const, flip, ($), (.))
+import           Data.Function                 (flip, ($), (.))
 import           Data.Maybe                    (Maybe (Just, Nothing))
 import           Data.Monoid                   (mempty)
 import           Data.Text                     (pack)
 import           Database.Couch.RequestBuilder (RequestBuilder, runBuilder)
 import           Database.Couch.ResponseParser (ResponseParser, runParse,
                                                 standardParse)
-import           Database.Couch.Types          (Context, Error (Unknown, ParseFail, ParseIncomplete),
+import           Database.Couch.Types          (Context, Error (ParseFail, ParseIncomplete),
                                                 Result, ctxCookies, ctxManager)
 import           Network.HTTP.Client           (CookieJar, Manager, Request,
-                                                brRead, method,
+                                                equalCookieJar, brRead, method,
                                                 responseBody, responseCookieJar,
                                                 responseHeaders, responseStatus,
                                                 withResponse)
@@ -117,7 +116,7 @@ structureRequest builder parse context =
     parseContext (h, s, c, v) =
       runParse parse (Right (h, s, v)) >>= checkContextUpdate c
     checkContextUpdate c a =
-      Right (a, if c == ctxCookies context then Nothing else Just c)
+      Right (a, if equalCookieJar c (ctxCookies context) then Nothing else Just c)
 
 {- | Make a HTTP request with standard CouchDB semantics
 
