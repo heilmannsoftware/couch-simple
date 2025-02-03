@@ -23,7 +23,7 @@ import           Control.Monad              (return, (>>=))
 import           Control.Monad.Reader       (Reader, asks, runReader)
 import           Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import           Data.Aeson                 (FromJSON, Result (Error, Success),
-                                             Value (Object), fromJSON)
+                                             Value (Object, String), fromJSON)
 import           Data.ByteString            (ByteString)
 import           Data.Either                (Either (Left, Right), either)
 import           Data.Eq                    ((==))
@@ -36,7 +36,7 @@ import           Data.Text                  (Text, pack)
 import           Data.Text.Encoding         (decodeUtf8)
 import           Data.Text.Read             (decimal)
 import           Data.Tuple                 (fst, snd)
-import           Database.Couch.Types       (DocRev (DocRev), Error (AlreadyExists, Conflict, HttpError, ImplementationError, InvalidName, NotFound, ParseFail, Unauthorized))
+import           Database.Couch.Types       (DocRev (DocRev), Error (AlreadyExists, Conflict, Deleted, HttpError, ImplementationError, InvalidName, NotFound, ParseFail, Unauthorized))
 import           GHC.Integer                (Integer)
 import           Network.HTTP.Types         (HeaderName, ResponseHeaders,
                                              Status, statusCode)
@@ -93,7 +93,11 @@ checkStatusCode = do
       error <- getKey "reason" >>= toOutputType
       throwE $ InvalidName error
     401 -> throwE Unauthorized
-    404 -> throwE NotFound
+    404 -> do
+      reason <- getKey "reason"
+      throwE $ case reason of
+        String "deleted" -> Deleted
+        _ -> NotFound
     409 -> throwE Conflict
     412 -> throwE AlreadyExists
     415 -> throwE $ ImplementationError "The server says we sent a bad content type, which shouldn't happen.  Please open an issue at https://github.com/mdorman/couch-simple/issues with a test case if possible."
