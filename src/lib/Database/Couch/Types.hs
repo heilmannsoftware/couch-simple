@@ -27,6 +27,8 @@ import           Control.Monad           (mapM, mzero, return)
 import           Data.Aeson              (FromJSON, ToJSON,
                                           Value (Array, Object, String), object,
                                           parseJSON, toJSON, (.:), (.:?), (.=))
+import qualified Data.Aeson.Key          as Key
+import qualified Data.Aeson.KeyMap       as KeyMap
 import           Data.Aeson.Types        (typeMismatch)
 import           Data.Biapplicative      ((<<*>>))
 import           Data.Bool               (Bool)
@@ -38,7 +40,6 @@ import           Data.Eq                 (Eq)
 import           Data.Function           (($), (.))
 import           Data.Functor            (fmap)
 import           Data.HashMap.Strict     (HashMap)
-import qualified Data.HashMap.Strict     as HashMap (fromList, toList)
 import           Data.Int                (Int)
 import           Data.List               ((++))
 import           Data.Maybe              (Maybe (Just, Nothing), catMaybes,
@@ -452,13 +453,13 @@ data DocRevMap
 
 -- | decode from JSON
 instance FromJSON DocRevMap where
-  parseJSON (Object o) = DocRevMap <$> mapM (\(k, v) -> (,) <$> (return . DocId $ k) <*> parseJSON v) (HashMap.toList o)
+  parseJSON (Object o) = DocRevMap <$> mapM (\(k, v) -> (,) <$> (return . DocId . Key.toText $ k) <*> parseJSON v) (KeyMap.toList o)
   parseJSON _ = mzero
 
 -- | encode to JSON
 instance ToJSON DocRevMap where
   -- The lack of symmetry in the outer and inner conversions annoys me, but I don't see how to make the outer point-free
-  toJSON (DocRevMap d) = Object . HashMap.fromList $ fmap ((unwrapDocId, Array . Vector.fromList . fmap (String . unwrapDocRev)) <<*>>) d
+  toJSON (DocRevMap d) = Object . KeyMap.fromList $ fmap ((Key.fromText . unwrapDocId, Array . Vector.fromList . fmap (String . unwrapDocRev)) <<*>>) d
 
 -- * View specification type
 
