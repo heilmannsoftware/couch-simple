@@ -22,10 +22,10 @@ module Database.Couch.ResponseParser where
 import           Control.Monad              (return, (>>=))
 import           Control.Monad.Reader       (Reader, asks, runReader)
 import           Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
-import           Data.Aeson                 (FromJSON, Result (Error, Success),
-                                             Value (Object, String), fromJSON)
+import           Data.Aeson                 (FromJSON, Value (Object, String), parseJSON)
 import qualified Data.Aeson.Key             as Key
 import qualified Data.Aeson.KeyMap          as KeyMap
+import           Data.Aeson.Types           (parseEither)
 import           Data.ByteString            (ByteString)
 import           Data.Either                (Either (Left, Right), either)
 import           Data.Eq                    ((==))
@@ -138,6 +138,7 @@ getKey key = do
 -- | Decode the response value to a particular type, or return an error if it can't be decoded
 toOutputType :: (FromJSON a) => Value -> ResponseParser a
 toOutputType v =
-  case fromJSON v of
-    Error e -> throwE $ ParseFail $ pack e
-    Success a -> return a
+  -- parseEither parseJSON includes the JSONPath in the error, which fromJSON doesn't.
+  case parseEither parseJSON v of
+    Left e -> throwE $ ParseFail $ pack e
+    Right a -> return a
